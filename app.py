@@ -5,7 +5,7 @@ from PyPDF2 import PdfReader
 
 # Add src to path for imports
 sys.path.append(os.path.abspath("src"))
-from medical_analyzer.crew import MedicalSummarizerCrew
+from src.medical_analyzer.crew import MedicalSummarizerCrew
 
 
 def extract_text_from_pdf(file):
