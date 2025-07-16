@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import sys
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 
 # Add src to path for imports
 sys.path.append(os.path.abspath("src"))
