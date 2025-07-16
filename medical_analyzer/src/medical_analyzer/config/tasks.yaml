@@ -1,0 +1,97 @@
+read_task:
+  description: >
+    You are given a raw medical report. Your job is to extract only the key test results and doctor's observations that are explicitly mentioned in the report.
+    
+    Do not add information that is not present. Do not make inferences. Your role is purely extractive.
+
+    Report Text:
+    {{ report_text }}
+
+    Focus on capturing:
+    - Test names (e.g., Hemoglobin, Blood Glucose, Cholesterol)
+    - Test results with units
+    - Reference ranges
+    - Any notes written by the doctor
+
+    Present the extracted data in structured bullet points. Ignore formatting issues or layout artifacts.
+  expected_output: >
+    Provide 5 to 10 clear bullet points showing the test name, result, unit, and reference range (if available). Also include any doctor's written notes word-for-word. Do not analyze or summarize.
+
+    Example output:
+    - Hemoglobin: 12.8 g/dL (Ref: 13.5 – 17.5 g/dL)
+    - Fasting Glucose: 132 mg/dL (Ref: 70 – 100 mg/dL)
+    - Doctor's Notes: "Elevated fasting glucose may indicate impaired glucose tolerance."
+
+  agent: reader_agent
+
+
+
+summarize_task:
+  description: >
+    Your task is to take the **explicit** extracted findings from the medical report and do two things:
+
+    1. Write a patient-friendly explanation of the findings in clear, simple terms (no jargon).
+    2. Write clinical notes for a doctor using standard medical terminology.
+
+    You MUST rely only on the findings provided below. Do not make any assumptions or include any information not present.
+
+    Findings:
+    {{ read_task.output }}
+
+    Rules:
+    - Do not invent missing information like blood pressure, BMI, chest X-rays, or smoking history unless mentioned explicitly.
+    - Do not change numerical values or reference ranges.
+    - If a finding is within normal limits, you may say so.
+    - If a value is abnormal based on its reference range, explain it simply and accurately.
+
+  expected_output: >
+    - Patient Summary: A 3–5 sentence summary in everyday language, explaining what the tests mean and any issues found.
+    - Doctor Notes: 3–7 bullet points summarizing the results in medical terms. Must be accurate, grounded in the findings, and free from speculation.
+
+  agent: summarizer_agent
+  output_file: output/summary.txt
+
+
+validate_summary_task:
+  description: >
+    Your job is to validate the summary below against the extracted findings. Look for:
+    - Any fabricated or hallucinated details (not found in the extracted data)
+    - Any mismatched values or units
+    - Any clinically important data that was omitted from the summary
+
+    Extracted Findings:
+    {{ read_task.output }}
+
+    Summary:
+    {{ summarize_task.output }}
+
+    Be strict. If you find any issues, list them clearly. If everything is accurate and complete, say: "✅ Summary matches the extracted data. No issues found."
+  expected_output: >
+    A bullet-point list of validation findings. If everything is correct, include a green tick message and stop.
+
+  agent: validator_agent
+  output_file: output/validation_report.txt
+
+
+revise_summary_task:
+  description: >
+    The validator has found issues with the summary. Your job is to revise the summary below, addressing all the validator's comments. Do not introduce new information. Only fix the issues listed.
+
+    Extracted Findings:
+    {{ read_task.output }}
+
+    Previous Summary:
+    {{ summarize_task.output }}
+
+    Validator Feedback:
+    {{ validate_summary_task.output }}
+
+    If the validator's feedback says everything is correct, do not change the summary.
+  expected_output: >
+    - Patient Summary: (revised, if needed)
+    - Doctor Notes: (revised, if needed)
+    If no changes are needed, repeat the previous summary.
+  agent: summarizer_agent
+  output_file: output/summary.txt
+
+
