@@ -665,7 +665,7 @@ PyPDF2
 uvicorn==0.34.3
 streamlit
 crewai
-PyPDF2
+pypdf2
     # via
     #   gradio
     #   mcp
