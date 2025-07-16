@@ -663,6 +663,9 @@ PyPDF2
     #   requests
     #   types-requests
 uvicorn==0.34.3
+streamlit
+crewai
+PyPDF2
     # via
     #   gradio
     #   mcp
